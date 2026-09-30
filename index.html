@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#4f46e5">
+<title>Estuda Aprovação</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial;background:#f5f7fb;color:#182033}
+header{background:linear-gradient(135deg,#4338ca,#6366f1);color:#fff;padding:28px 18px 36px}
+.wrap{max-width:1050px;margin:auto;padding:0 16px}.brand{font-size:28px;font-weight:800}.sub{opacity:.9;margin-top:5px}
+nav{position:sticky;bottom:0;background:#fff;border-top:1px solid #ddd;display:flex;justify-content:center;z-index:5}
+nav button{border:0;background:none;padding:12px 10px;font-weight:700;color:#555;cursor:pointer}
+main{padding:20px 0 90px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.card{background:#fff;border:1px solid #e6e8ef;border-radius:18px;padding:18px;box-shadow:0 3px 14px #00000008}
+h1,h2,h3{margin-top:0}.muted{color:#687085}.btn{border:0;border-radius:12px;padding:12px 16px;background:#4f46e5;color:white;font-weight:800;cursor:pointer}
+.btn.alt{background:#eef0ff;color:#3730a3}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.stat{font-size:25px;font-weight:800}.pill{display:inline-block;background:#eef0ff;color:#3730a3;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800}
+input,select{width:100%;padding:13px;border:1px solid #ccd1df;border-radius:11px;margin:7px 0 12px;font:inherit}
+.hidden{display:none}.option{display:block;width:100%;text-align:left;margin:8px 0;padding:14px;border:1px solid #ccd1df;background:#fff;border-radius:12px;cursor:pointer}
+.option.selected{border:2px solid #4f46e5;background:#eef0ff}.correct{border-color:#16a34a!important;background:#effdf3!important}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">📚 Estuda Aprovação</div><div class="sub">Aprenda → faça questões → corrija → revise → evolua.</div></div></header>
+<main class="wrap">
+<section id="home">
+<div class="grid">
+<div class="card"><div class="stat" id="answered">0</div><div class="muted">Questões</div></div>
+<div class="card"><div class="stat" id="correct">0</div><div class="muted">Acertos</div></div>
+<div class="card"><div class="stat" id="rate">0%</div><div class="muted">Aproveitamento</div></div>
+</div>
+<h2 style="margin-top:24px">Escolha seu concurso</h2>
+<div class="grid" id="contestGrid"></div>
+<div class="card" style="margin-top:14px"><h3>Como estudar</h3><p>Não fique só lendo. Estude o assunto, faça muitas questões, corrija todas, identifique o motivo de cada erro e refaça depois.</p></div>
+</section>
+
+<section id="schedule" class="hidden">
+<div class="card"><h2>📅 Cronograma</h2><p class="muted">Monte uma rotina sustentável com o tempo que você realmente possui.</p>
+<label>Horas por dia</label><input id="hours" type="number" min="1" value="2">
+<label>Dias disponíveis</label><select id="days"><option>Segunda a sexta</option><option>Segunda, quarta e sexta</option><option>Todos os dias</option><option>Fim de semana</option></select>
+<button class="btn" onclick="makeSchedule()">Gerar cronograma</button><div id="plan"></div></div>
+</section>
+
+<section id="performance" class="hidden">
+<div class="card"><h2>📊 Desempenho</h2><div class="grid"><div><div class="stat" id="pAnswered">0</div>questões</div><div><div class="stat" id="pCorrect">0</div>acertos</div><div><div class="stat" id="pRate">0%</div>aproveitamento</div></div></div>
+</section>
+
+<section id="help" class="hidden">
+<div class="card"><h2>🛠️ Ajuda e bugs</h2><p>Encontrou um problema? Anote o que aconteceu e envie para o suporte quando o backend estiver conectado.</p><input id="bug" placeholder="Descreva o problema"><button class="btn" onclick="alert('Relato salvo nesta demonstração.')">Reportar bug</button></div>
+</section>
+
+<section id="quiz" class="hidden">
+<div class="card"><span class="pill" id="quizContest"></span><h2 id="quizTitle"></h2><div id="quizBody"></div></div>
+</section>
+</main>
+<nav>
+<button onclick="show('home')">🏠<br>Início</button>
+<button onclick="show('home')">📚<br>Concursos</button>
+<button onclick="show('schedule')">📅<br>Cronograma</button>
+<button onclick="show('performance');refresh()">📊<br>Desempenho</button>
+<button onclick="show('help')">❓<br>Ajuda</button>
+</nav>
+<script>
+const contests=[
+['ESA',['Matemática','Português','História','Geografia','Inglês']],
+['EFOMM',['Matemática','Física','Português','Inglês']],
+['EsPCEx',['Matemática','Português','Física','História','Geografia','Inglês']],
+['ITA',['Matemática','Física','Química','Português','Inglês']],
+['Marketing Digital',['Fundamentos','Tráfego Pago','Copywriting','Analytics','Estratégia']]
+];
+let qs=[],qi=0,sel=null,correctSession=0;
+function getA(){return +(localStorage.answered||0)}function getC(){return +(localStorage.correct||0)}
+function refresh(){let a=getA(),c=getC(),r=a?Math.round(c/a*100):0;['answered','pAnswered'].forEach(x=>document.getElementById(x).textContent=a);['correct','pCorrect'].forEach(x=>document.getElementById(x).textContent=c);['rate','pRate'].forEach(x=>document.getElementById(x).textContent=r+'%')}
+function show(id){document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');refresh()}
+function renderContests(){let g=document.getElementById('contestGrid');g.innerHTML=contests.map(c=>`<div class="card"><span class="pill">${c[0]}</span><h3>${c[0]}</h3><p class="muted">${c[1].length} matérias • Nivelar • Simulado • Inglês</p><div class="actions"><button class="btn" onclick="start('${c[0]}','Nivelar')">🎯 Nivelar</button><button class="btn alt" onclick="start('${c[0]}','Simulado')">📝 Simulado</button><button class="btn alt" onclick="start('${c[0]}','Inglês')">🇺🇸 Inglês</button></div></div>`).join('')}
+function start(name,type){let c=contests.find(x=>x[0]==name);qs=(type=='Inglês'?['Inglês']:[...c[1]]).map((s,i)=>({subject:s,text:`QUESTÃO DEMONSTRATIVA — ${s}\\n\\nQual alternativa apresenta a afirmação correta de acordo com o conceito estudado?`,options:['Alternativa A','Alternativa B','Alternativa C','Alternativa D','Alternativa E'],answer:i%5}));qi=0;sel=null;correctSession=0;document.getElementById('quizContest').textContent=name;document.getElementById('quizTitle').textContent=type;show('quiz');renderQ()}
+function renderQ(){let q=qs[qi];document.getElementById('quizBody').innerHTML=`<p class="muted">Questão ${qi+1} de ${qs.length} • ${q.subject}</p><h3>${q.text.replaceAll('\\n','<br>')}</h3>${q.options.map((o,i)=>`<button class="option ${sel===i?'selected':''}" onclick="choose(${i})">${String.fromCharCode(65+i)}) ${o}</button>`).join('')}<div class="actions"><button class="btn" onclick="checkQ()">Responder</button></div>`}
+function choose(i){sel=i;renderQ()}
+function checkQ(){if(sel===null)return;let q=qs[qi],buttons=document.querySelectorAll('.option');buttons[q.answer].classList.add('correct');if(sel===q.answer)correctSession++;setTimeout(()=>{if(qi<qs.length-1){qi++;sel=null;renderQ()}else{localStorage.answered=getA()+qs.length;localStorage.correct=getC()+correctSession;alert(`Resultado: ${correctSession}/${qs.length}`);show('home')}},500)}
+function makeSchedule(){let h=+document.getElementById('hours').value||2,d=document.getElementById('days').value;document.getElementById('plan').innerHTML=`<div class="card" style="margin-top:16px"><h3>Seu plano</h3><p><b>${h}h/dia</b> • ${d}</p><p>📖 40% teoria/revisão<br>📝 40% questões<br>🧠 20% correção + caderno de erros</p><p>Inclua Inglês regularmente e aumente o número de questões conforme sua base melhorar.</p></div>`}
+renderContests();refresh();
+</script>
+</body>
+</html>
